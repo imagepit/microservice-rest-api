@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>マイクロサービスサンプル</title>
+    <!-- UIkit -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.2.7/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.2.7/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.2.7/dist/js/uikit-icons.min.js"></script>
+    <style>
+        body {
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body>
+<h1>マイクロサービスサンプル</h1>
+<div id="app">
+    <table class="uk-table-striped" width="800">
+        <tr>
+            <td>ID</td>
+            <td>名前</td>
+            <td>パスワード</td>
+            <td>削除</td>
+        </tr>
+        <tr is="users" v-for="item in users" v-bind:user="item"></tr>
+    </table>
+    <h2>ユーザ登録</h2>
+    ID:<input v-model="user_id"><br />
+    名前:<input v-model="user_name"><br />
+    パスワード:<input v-model="user_password"><br />
+    <button @click="register">ユーザ追加</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.1/axios.min.js"></script>
+<script>
+        Vue.component('users', {
+            template: `<tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.password }}</td>
+                            <td><button @click="delete_user(user.id)">削除</button></td>
+                       </tr>`,
+            props: ['user'],
+            methods: {
+                delete_user: function (index) {
+                    if (window.confirm('削除していいですか？')) {
+                        axios.delete('http://localhost:8080/api/user/' + this.user.id)
+                            .then(res => {
+                                this.$parent.fetch_users() // 親コンポーネントのメソッド実行
+                            })
+                            .catch(error => {
+                                throw error
+                            })
+                    }
+                }
+            }
+        })
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                hello: "マイクロサービスサンプル",
+                users: [],
+                user_id: "",
+                user_name: "",
+                user_password: "",
+            },
+            created() {
+                this.fetch_users()
+            },
+            methods: {
+                register: function () {
+                    if (this.user_id == "") { alert("ID未入力です"); return }
+                    if (this.user_name == "") { alert("名前未入力です"); return }
+                    if (this.user_password == "") { alert("パスワード未入力です"); return }
+                    this.post_user();
+                    console.log("ユーザ登録");
+                },
+                fetch_users: function () {
+                    axios.get('http://localhost:8080/api/user')
+                        .then(res => {
+                            console.log(res.data);
+                            this.users = res.data;
+                        })
+                        .catch(error => {
+                            throw error
+                        })
+                },
+                post_user: function () {
+                    var user = {
+                        id: this.user_id,
+                        name: this.user_name,
+                        password: this.user_password,
+                    }
+                    axios.post('http://localhost:8080/api/user', user)
+                        .then(res => {
+                            console.log(res);
+                            this.user_id = "";
+                            this.user_name = "";
+                            this.user_password = "";
+                            this.fetch_users();
+                        })
+                        .catch(error => {
+                            throw error
+                        })
+                },
+            },
+        })
+    </script>
+</body>
+</html>

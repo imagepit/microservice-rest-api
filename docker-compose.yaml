@@ -1,0 +1,16 @@
+version: '2'
+services: # この配下にコンテナ仕様を記述
+  app: # コンテナ名（内部）
+    container_name: "user-app" # コンテナ名（外部向け）
+    image: openjdk:14.0.2 # コンテナイメージ
+    ports: # ホストOSとコンテナのポートマッピング
+      - "3001:8080" # ホストOSの3001ポートでコンテナの8080ポートへ
+    volumes: # ホストOSとコンテナのファイル共有
+      - .:/app # ホストOSのカレントディレクトリとコンテナの/appを共有
+    working_dir: /app # コンテナのカレントディレクトリ
+    command: ./gradlew bootRun # Spring Boot起動コマンド
+    networks: # コンテナのネットワーク名の指定
+      - local
+networks: # このコンテナを外部にも公開するかの設定
+  local:
+    external: true
